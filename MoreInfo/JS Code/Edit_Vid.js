@@ -1,8 +1,7 @@
 navigator.getUserMedia (
    // constraints
    {
-      video: true,
-      audio: true
+      video: true
    },
 
    function(localMediaStream) {
