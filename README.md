@@ -1,3 +1,4 @@
+#(Im not good at hacking so dont expect these cheats to be good lol)
 # RSM-Hack
 A cheat for RSM (Russain Math School)
 
