@@ -1,1 +1,0 @@
-javascript:(function()%7Bvar%20SFLID%20%3D%20document.getElementById('fullscreenMask')%0ASFLID.parentNode.removeChild(SFLID)%7D)()%3B
