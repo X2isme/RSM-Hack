@@ -1,0 +1,327 @@
+// ==UserScript==
+// @name         RSM Tab Button
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  makes it esier to search for answers
+// @author       You
+// @match        https://homework.russianschool.com/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=russianschool.com
+// @grant        none
+// ==/UserScript==
+
+// Important Functions
+function copyToClipboard(text) {
+    var dummy = document.createElement("textarea");
+    document.body.appendChild(dummy);
+    dummy.value = text;
+    dummy.select();
+    document.execCommand("copy");
+    document.body.removeChild(dummy);
+}
+
+function getOutputText() {
+    const outputElement = document.querySelectorAll('output.ng-scope')[1];
+    let resultString = '';
+
+    if (outputElement) {
+        function processNode(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                resultString += node.textContent.trim();
+            }
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                if (node.classList.contains('elastic-l')) {
+                    resultString += '(';
+                } else if (node.classList.contains('elastic-r')) {
+                    resultString += ')';
+                } else if (node.classList.contains('modulus-body') && node.classList.contains('container')) {
+                    resultString += 'abs(';
+                    node.childNodes.forEach(processNode);
+                    resultString += ')';
+                    return;
+                } else if (node.tagName.toLowerCase() === 'sup') {
+                    resultString += '^{';
+                    resultString += node.textContent.trim();
+                    resultString += '}';
+                    return;
+                } else if (node.tagName.toLowerCase() === 'td') {
+                    if (node.classList.contains('fraction-top') && node.classList.contains('container')) {
+                        node.childNodes.forEach(processNode);
+                        resultString += '/';
+                        return;
+                    } else if (node.classList.contains('fraction-bottom') && node.classList.contains('container')) {
+                        node.childNodes.forEach(processNode);
+                        return;
+                    } else if (node.classList.contains('sqrt-body') && node.classList.contains('container')) {
+                        resultString += 'sqrt(';
+                        node.childNodes.forEach(processNode);
+                        resultString += ')';
+                        return;
+                    } else if (node.classList.contains('array-body') && node.classList.contains('container')) {
+                        node.childNodes.forEach(processNode);
+                        resultString += ', ';
+                        return;
+                    }
+                }
+                node.childNodes.forEach(processNode);
+            }
+        }
+        outputElement.childNodes.forEach(processNode);
+        return resultString;
+    } else {
+        return '';
+    }
+}
+
+//GUI SECTION
+var newDiv = document.createElement("div");
+newDiv.className = "problem-section ng-scope";
+newDiv.id = "GUI-Section"
+newDiv.setAttribute('ng-if','!(question &amp;&amp; question.bonus &amp;&amp; assignment.bonusesLocked)');
+
+// TAB BUTTON
+var searchTextWord;
+var tabCounterWord = 0;
+
+var tabButtonWord = document.createElement("button");
+tabButtonWord.className = "btn btn-sm help btn-reference ng-scope searchQuestion";
+tabButtonWord.innerText = "Search Question [Word Problems]";
+tabButtonWord.style.border = "1px solid #a3a2a2";
+tabButtonWord.style.color = "#616161";
+tabButtonWord.style.backgroundColor = "#bfbfbf";
+tabButtonWord.style.fontSize = "12px";
+tabButtonWord.style.backgroundImage = "url('https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png')";
+tabButtonWord.style.width = "auto";
+tabButtonWord.addEventListener ("click", function() {
+    //Once button clicked
+    tabButtonWord.disabled = true;
+    searchTextWord = "";
+    tabCounterWord = 0;
+    while (tabCounterWord < document.querySelectorAll(".problem-question").length) {
+        searchTextWord = searchTextWord + document.querySelectorAll(".problem-question")[tabCounterWord].innerText + "  "
+        tabCounterWord += 1;
+    }
+    if (tabCounterWord == document.querySelectorAll(".problem-question").length) {
+        window.open("https://www.google.com/search?q=" + searchTextWord)
+    } else {
+        if (confirm("coudnt verify search, do you want to still continue?")) {
+            window.open("https://www.google.com/search?q=" + searchTextWord)
+        }
+    }
+    tabButtonWord.disabled = false;
+});
+
+// TAB BUTTON MATH
+var searchText;
+
+var tabButton = document.createElement("button");
+tabButton.className = "btn btn-sm help btn-reference ng-scope searchQuestionMath";
+tabButton.innerText = "Search Question [Math Problems]";
+tabButton.style.border = "1px solid #a3a2a2";
+tabButton.style.color = "#0e0d54";
+tabButton.style.backgroundColor = "#514ee6";
+tabButton.style.fontSize = "12px";
+tabButton.style.backgroundImage = "url('https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png')";
+tabButton.style.width = "auto";
+tabButton.addEventListener ("click", function() {
+    //Once button clicked
+    tabButton.disabled = true;
+    searchText = "";
+
+    searchText = document.querySelector(".problem-question").innerText + getOutputText();
+    window.open("https://www.google.com/search?q=" + searchText)
+    tabButton.disabled = false;
+});
+
+// TAB BUTTON PLAIN
+var searchTextPlain;
+
+var tabButtonPlain = document.createElement("button");
+tabButtonPlain.className = "btn btn-sm help btn-reference ng-scope searchQuestionMath";
+tabButtonPlain.innerText = "Search Question [Math Problems (PLAIN)]";
+tabButtonPlain.style.border = "1px solid #0b5aa3";
+tabButtonPlain.style.color = "#072669";
+tabButtonPlain.style.backgroundColor = "#2583db";
+tabButtonPlain.style.fontSize = "12px";
+tabButtonPlain.style.backgroundImage = "url('https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png')";
+tabButtonPlain.style.width = "auto";
+tabButtonPlain.addEventListener ("click", function() {
+    //Once button clicked
+    tabButtonPlain.disabled = true;
+    searchText = "";
+
+    searchText = getOutputText();
+    window.open("https://www.google.com/search?q=" + searchText)
+    tabButtonPlain.disabled = false;
+});
+
+// COPY BUTTON
+
+var copyCounter = 0;
+var copyClipboard;
+
+var copyButton = document.createElement("button");
+copyButton.className = "btn btn-sm help btn-reference ng-scope searchQuestion";
+copyButton.innerText = "Copy Question [Most Problems]";
+copyButton.style.border = "1px solid #ab4dff";
+copyButton.style.color = "#390c61";
+copyButton.style.backgroundColor = "#bc70ff";
+copyButton.style.fontSize = "12px";
+copyButton.style.backgroundImage = "url('https://static-00.iconduck.com/assets.00/copy-icon-1024x1024-3m4ffdcs.png')";
+copyButton.style.width = "auto";
+copyButton.addEventListener ("click", function() {
+    //Once button clicked
+    copyButton.disabled = true;
+    copyClipboard = "";
+    copyCounter = 0;
+    copyClipboard = document.querySelector(".problem-question").innerText + " " + getOutputText();
+    console.log("Copied question to clipboard!");
+    copyToClipboard(copyClipboard);
+    copyButton.disabled = false;
+});
+
+// FREEDOM TEXT BOX
+
+var freedomButton = document.createElement("button");
+freedomButton.className = "btn btn-sm help btn-reference ng-scope searchQuestion";
+freedomButton.innerText = "FREEDOM MODE [RAHHHH!!!]";
+freedomButton.style.border = "1px solid #001f03";
+freedomButton.style.color = "#004006";
+freedomButton.style.backgroundColor = "#0db81e";
+freedomButton.style.fontSize = "12px";
+freedomButton.style.backgroundImage = "url('https://cdn1.iconfinder.com/data/icons/flags-of-the-world-set-2-1/100/.svg-14-512.png')";
+freedomButton.style.width = "auto";
+freedomButton.addEventListener ("click", function() {
+    //Once button clicked
+    freedomButton.disabled = true;
+    console.log("FREEDOM MODE ACTIVATED!! RAHHHHHHHH!!!");
+    FREEDOMTEXTBOX()
+
+    window.addEventListener('hashchange', function() {
+        location.reload();
+    });
+});
+
+
+// Show Buttons
+
+window.navigation.addEventListener("navigate", (event) => { // re-add button if location changed and button is gone
+    if (document.querySelector(".searchQuestion") == null) {
+        waitForElement();
+    }
+})
+
+function showButton() {
+    if(document.getElementById("GUI-Section")==null) {
+        document.querySelector(".with-left-part.col-sm-9").firstElementChild.insertAdjacentHTML("afterend", newDiv.outerHTML);
+        document.querySelector(".with-left-part.col-sm-9").firstElementChild.insertAdjacentHTML("afterend", '<div style="margin: 20px;"></div>');
+    }
+    document.getElementById("GUI-Section").appendChild(tabButtonPlain);
+    document.getElementById("GUI-Section").appendChild(tabButtonWord);
+    document.getElementById("GUI-Section").appendChild(tabButton);
+    document.getElementById("GUI-Section").appendChild(copyButton);
+    document.getElementById("GUI-Section").appendChild(freedomButton);
+}
+
+function waitForElement(){
+    if(document.querySelector("[ng-if = '(isHomeworkAssignment || isClassWorkAssignment) && !question.survey']") !== null){
+        setTimeout(showButton, 300); // found button
+        waitForHints()
+    }
+    else{
+        setTimeout(waitForElement, 250);
+    }
+}
+waitForElement()
+
+function waitForHints(){
+    if(Hints.load !== null){
+        setTimeout(hintLogger, 250);
+    }
+    else{
+        setTimeout(waitForHints, 250);
+    }
+}
+waitForHints()
+
+
+//BETTER TEXTBOX
+
+//Man in middle attack for textbox
+function hintLogger(){
+    console.log('hintLogger started')
+
+    const originalHintsLoad = Hints.load;
+    Hints.load = function(countdownMessageCallbackTEMP, questionNoTEMP, questionIdTEMP, assetIdTEMP, subProblemIdxTEMP) {
+        console.log('hintLogger ran ' + questionNoTEMP + " " + questionIdTEMP)
+        localStorage.setItem('HiddenData', JSON.stringify([questionNoTEMP, questionIdTEMP]));
+
+        return originalHintsLoad.apply(this, countdownMessageCallbackTEMP, questionNoTEMP, questionIdTEMP, assetIdTEMP, subProblemIdxTEMP);
+    };
+}
+
+//Actual Textbox
+function FREEDOMTEXTBOX(){
+    //Textbox
+    const originalTextBox = document.querySelector(".mathquill-editable")
+    var newTextBox = document.createElement('input');
+    originalTextBox.parentElement.appendChild(newTextBox)
+    originalTextBox.style.display='none'; //Hides Original TextBox
+
+    newTextBox.style.width = "auto";
+    newTextBox.style.minWidth = "5ch";
+    newTextBox.placeholder = window.getComputedStyle(document.querySelector('.mathquill-editable'),'::before').getPropertyValue('content').replace(/['"]/g, '');
+
+    //Grade Button
+    const originalButton = document.querySelector(".grade-answer-btn")
+    var newButton = document.createElement('button');
+    originalButton.parentElement.insertBefore(newButton, originalButton);
+    originalButton.style.display='none'; //Hides Original Button
+
+    newButton.innerText = "FREEDOM GRADER";
+    newButton.style.color = "#FFFFFF";
+    newButton.style.backgroundColor = "#0db81e";
+    newButton.style.font = '16px/21px "Open Sans",sans-serif';
+    newButton.style.padding = "12px 20px!important";
+    newButton.style.borderRadius = "7px";
+    newButton.style.border = "none";
+    newButton.style.width = "auto";
+    newButton.style.transition = "background-color 0.1s";
+    newButton.onmouseover = () => newButton.style.backgroundColor = "#0a9f14"; newButton.onmouseout = () => newButton.style.backgroundColor = "#0db81e";
+    newButton.onclick = () => {
+        if (parseInt(window.location.hash.match(/[?&]q=(\d+)$/)?.[1]) === JSON.parse(localStorage.getItem('HiddenData'))[0]) {
+            fetch("https://homework.russianschool.com/StudentPortal/save-grade-answer.json?action=grade&qid=" + JSON.parse(localStorage.getItem('HiddenData'))[1] + "", {
+                "referrer": "https://homework.russianschool.com/StudentPortal/",
+                "referrerPolicy": "strict-origin-when-cross-origin",
+                "body": "[\"_mathquill_" + newTextBox.value + "\"]",
+                "method": "POST",
+                "mode": "cors",
+                "credentials": "include"
+            });
+            location.reload();
+        }
+        else {
+            alert("WARNING: the qid dosent match up, to not screw up your rsm the page with refresh. QuestionNum given: " + JSON.parse(localStorage.getItem('HiddenData'))[0] + " QuestionNum from url: " + window.location.hash.match(/[?&]q=(\d+)$/)?.[1])
+            location.reload();
+        }
+    };
+
+    //Exit Button
+    var ExitButton = document.createElement('button');
+    newButton.parentElement.appendChild(ExitButton)
+
+    ExitButton.innerText = "Exit";
+    ExitButton.style.color = "#FFFFFF";
+    ExitButton.style.backgroundColor = "#d41515";
+    ExitButton.style.font = '16px/21px "Open Sans",sans-serif';
+    ExitButton.style.padding = "12px 20px!important";
+    ExitButton.style.borderRadius = "7px";
+    ExitButton.style.border = "none";
+    ExitButton.style.width = "auto";
+    ExitButton.style.transition = "background-color 0.15s";
+    ExitButton.style.backgroundImage = "url('https://png.pngtree.com/png-vector/20240726/ourmid/pngtree-3d-crying-face-emoji-in-yellow-colour-on-transparent-background-png-image_13239274.png')";
+    ExitButton.onmouseover = () => ExitButton.style.backgroundColor = "#6e0c0c"; ExitButton.onmouseout = () => ExitButton.style.backgroundColor = "#d41515";
+    ExitButton.onclick = () => {
+        location.reload();
+    };
+
+}
