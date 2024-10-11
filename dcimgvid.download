@@ -1,0 +1,51 @@
+// Find all images inside <a> tags with a class that starts with "originalLink_"
+const imageLinks = document.querySelectorAll('a[class^="originalLink_"][data-role="img"]');
+
+// Extract the URLs of the images from their 'href' attribute
+const imageUrls = Array.from(imageLinks).map(link => link.href);
+
+// Find all video elements with a class that starts with "video_"
+const videoElements = document.querySelectorAll('video[class^="video_"]'); // Matches any class starting with "video_"
+
+// Extract the video URLs from their 'src' attribute
+const videoUrls = Array.from(videoElements).map(video => video.src);
+
+// Helper function to generate a random 20-character ID
+function generateRandomID(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
+
+// Function to download images using fetch and blob
+async function downloadImage(url) {
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        
+        // Generate a random 20-character ID and set the download filename
+        const randomID = generateRandomID(20); // Ensuring the ID is 20 characters long
+        link.download = `${randomID}.png`; // Set the filename as randomID.png
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Image download failed:', error);
+    }
+}
+
+// Process each image URL to download it
+imageUrls.forEach(url => {
+    downloadImage(url); // Download images directly using fetch
+});
+
+// Process each video URL to open in a new tab
+videoUrls.forEach(url => {
+    window.open(url, '_blank'); // Open video URLs in a new tab
+});
