@@ -19,8 +19,8 @@ function copyToClipboard(text) {
     document.body.removeChild(dummy);
 }
 
-function getOutputText() {
-    const outputElement = document.querySelectorAll('output.ng-scope')[1];
+function getOutputText(item) {
+    const outputElement = document.querySelectorAll('output.ng-scope')[item];
     let resultString = '';
 
     if (outputElement) {
@@ -43,6 +43,12 @@ function getOutputText() {
                     resultString += node.textContent.trim();
                     resultString += '}';
                     return;
+                } else if (node.tagName.toLowerCase() === 'div') {
+                    if (node.attributes.length === 0 && node.children.length > 0) {
+                        resultString += " ";
+                        node.childNodes.forEach(processNode);
+                        return;
+                    }
                 } else if (node.tagName.toLowerCase() === 'td') {
                     if (node.classList.contains('fraction-top') && node.classList.contains('container')) {
                         node.childNodes.forEach(processNode);
@@ -72,13 +78,14 @@ function getOutputText() {
     }
 }
 
+
 //GUI SECTION
 var newDiv = document.createElement("div");
 newDiv.className = "problem-section ng-scope";
 newDiv.id = "GUI-Section"
 newDiv.setAttribute('ng-if','!(question &amp;&amp; question.bonus &amp;&amp; assignment.bonusesLocked)');
 
-// TAB BUTTON
+// TAB BUTTON WORD
 var searchTextWord;
 var tabCounterWord = 0;
 
@@ -110,12 +117,12 @@ tabButtonWord.addEventListener ("click", function() {
     tabButtonWord.disabled = false;
 });
 
-// TAB BUTTON MATH
+// TAB BUTTON MOST
 var searchText;
 
 var tabButton = document.createElement("button");
 tabButton.className = "btn btn-sm help btn-reference ng-scope searchQuestionMath";
-tabButton.innerText = "Search Question [Math Problems]";
+tabButton.innerText = "Search Question [Most Problems]";
 tabButton.style.border = "1px solid #a3a2a2";
 tabButton.style.color = "#0e0d54";
 tabButton.style.backgroundColor = "#514ee6";
@@ -127,7 +134,9 @@ tabButton.addEventListener ("click", function() {
     tabButton.disabled = true;
     searchText = "";
 
-    searchText = document.querySelector(".problem-question").innerText + getOutputText();
+    for (var i = 0; i < document.querySelectorAll('output.ng-scope').length; i++) {
+        searchText += " " + getOutputText(i);
+    }
     window.open("https://www.google.com/search?q=" + searchText)
     tabButton.disabled = false;
 });
@@ -173,7 +182,9 @@ copyButton.addEventListener ("click", function() {
     copyButton.disabled = true;
     copyClipboard = "";
     copyCounter = 0;
-    copyClipboard = document.querySelector(".problem-question").innerText + " " + getOutputText();
+        for (var i = 0; i < document.querySelectorAll('output.ng-scope').length; i++) {
+        copyClipboard += " " + getOutputText(i);
+    }
     console.log("Copied question to clipboard!");
     copyToClipboard(copyClipboard);
     copyButton.disabled = false;
@@ -215,9 +226,9 @@ function showButton() {
         document.querySelector(".with-left-part.col-sm-9").firstElementChild.insertAdjacentHTML("afterend", newDiv.outerHTML);
         document.querySelector(".with-left-part.col-sm-9").firstElementChild.insertAdjacentHTML("afterend", '<div style="margin: 20px;"></div>');
     }
+    document.getElementById("GUI-Section").appendChild(tabButton);
     document.getElementById("GUI-Section").appendChild(tabButtonPlain);
     document.getElementById("GUI-Section").appendChild(tabButtonWord);
-    document.getElementById("GUI-Section").appendChild(tabButton);
     document.getElementById("GUI-Section").appendChild(copyButton);
     document.getElementById("GUI-Section").appendChild(freedomButton);
 }
@@ -252,8 +263,12 @@ function hintLogger(){
 
     const originalHintsLoad = Hints.load;
     Hints.load = function(countdownMessageCallbackTEMP, questionNoTEMP, questionIdTEMP, assetIdTEMP, subProblemIdxTEMP) {
-        console.log('hintLogger ran ' + questionNoTEMP + " " + questionIdTEMP)
-        localStorage.setItem('HiddenData', JSON.stringify([questionNoTEMP, questionIdTEMP]));
+        //console.log('hintLogger ran ' + questionNoTEMP + " " + questionIdTEMP)
+        if (questionNoTEMP != null){
+            localStorage.setItem('HiddenData', JSON.stringify([questionNoTEMP, questionIdTEMP]));
+        } else {
+        //console.log("Hintlogger save Rejected due to null values")
+        }
 
         return originalHintsLoad.apply(this, countdownMessageCallbackTEMP, questionNoTEMP, questionIdTEMP, assetIdTEMP, subProblemIdxTEMP);
     };
