@@ -1,5 +1,6 @@
 import os
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 # Ensure mw3 folder exists
 os.makedirs('mw3', exist_ok=True)
@@ -14,8 +15,8 @@ with open(file_path, 'r') as file:
 # Split the string by commas to get individual URLs
 links = data.split(',')
 
-# Download each link
-for link in links:
+# Function to download a single file
+def download_file(link):
     # Clean up any surrounding spaces or newlines
     link = link.strip()
 
@@ -24,10 +25,17 @@ for link in links:
     file_path = os.path.join('mw3', file_name)
 
     # Download the file
-    response = requests.get(link)
-    if response.status_code == 200:
-        with open(file_path, 'wb') as f:
-            f.write(response.content)
-        print(f"Downloaded {file_name} to mw3 folder.")
-    else:
-        print(f"Failed to download {file_name}. Status code: {response.status_code}")
+    try:
+        response = requests.get(link)
+        if response.status_code == 200:
+            with open(file_path, 'wb') as f:
+                f.write(response.content)
+            print(f"Downloaded {file_name} to mw3 folder.")
+        else:
+            print(f"Failed to download {file_name}. Status code: {response.status_code}")
+    except Exception as e:
+        print(f"Error downloading {file_name}: {e}")
+
+# Use ThreadPoolExecutor to download files concurrently
+with ThreadPoolExecutor(max_workers=5) as executor:
+    executor.map(download_file, links)
