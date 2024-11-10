@@ -1,0 +1,35 @@
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+// Function to save a string as a .txt file
+function saveTextAsFile(text, filename) {
+    // Create a blob with the text content
+    const blob = new Blob([text], { type: "text/plain" });
+    
+    // Create a link element
+    const link = document.createElement("a");
+    
+    // Create a URL for the blob and set it as the href of the link
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}.txt`; // Set the download attribute with the desired filename
+    
+    // Append the link to the document, click it to trigger the download, then remove it
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+saveTextAsFile(getCookie("SavedVideoURLS"), "SavedVideoURLS");
