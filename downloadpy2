@@ -11,11 +11,14 @@ file_path = r'c:\Users\car.ls\Documents\testyye\SavedVideoURLS.txt'
 with open(file_path, 'r') as file:
     data = file.read()
 
-# Extract URLs from the file data
-links = eval(data)  # Assumes file content is in list format as shown
+# Split the string by commas to get individual URLs
+links = data.split(',')
 
 # Download each link
 for link in links:
+    # Clean up any surrounding spaces or newlines
+    link = link.strip()
+
     # Get the file name from the URL
     file_name = link.split('/')[-1].split('?')[0]
     file_path = os.path.join('mw3', file_name)
