@@ -1,0 +1,35 @@
+// Helper function to get the value of a cookie by name
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Helper function to set a cookie with a specified name, value, and expiration in days
+function setCookie(name, value, days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = `expires=${date.toUTCString()}`;
+    document.cookie = `${name}=${value}; ${expires}; path=/`;
+}
+
+// Retrieve the saved URLs from the cookie or initialize an empty array if it doesn't exist
+let savedUrls = JSON.parse(getCookie("SavedVideoURLS") || "[]");
+
+// Find all video elements with a class that starts with "video_"
+const videoElements = document.querySelectorAll('video[class^="video_"]'); // Matches any class starting with "video_"
+
+// Extract the video URLs from their 'src' attribute
+const videoUrls = Array.from(videoElements).map(video => video.src);
+
+// Process each video URL to open in a new tab and save if it's not already saved
+videoUrls.forEach(url => {
+    if (!savedUrls.includes(url)) { // Check if URL is not already saved
+        savedUrls.push(url); // Add new URL to saved URLs array
+        console.log("Collected Videos")
+    }
+});
+
+// Update the cookie with the updated URLs array, set to expire in 7 days
+setCookie("SavedVideoURLS", JSON.stringify(savedUrls), 7);
