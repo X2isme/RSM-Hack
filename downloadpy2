@@ -1,0 +1,30 @@
+import os
+import requests
+
+# Ensure mw3 folder exists
+os.makedirs('mw3', exist_ok=True)
+
+# Replace this with the full path to your Saved.txt file
+file_path = r'c:\Users\car.ls\Documents\testyye\SavedVideoURLS.txt'
+
+# Read the file content
+with open(file_path, 'r') as file:
+    data = file.read()
+
+# Extract URLs from the file data
+links = eval(data)  # Assumes file content is in list format as shown
+
+# Download each link
+for link in links:
+    # Get the file name from the URL
+    file_name = link.split('/')[-1].split('?')[0]
+    file_path = os.path.join('mw3', file_name)
+
+    # Download the file
+    response = requests.get(link)
+    if response.status_code == 200:
+        with open(file_path, 'wb') as f:
+            f.write(response.content)
+        print(f"Downloaded {file_name} to mw3 folder.")
+    else:
+        print(f"Failed to download {file_name}. Status code: {response.status_code}")
